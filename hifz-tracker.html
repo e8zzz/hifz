@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hifz Journey</title>
+<meta name="description" content="Track, plan, and stay consistent with your Qur'an memorization journey.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hifz Journey">
+<meta name="theme-color" content="#0B1622">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1622;
+    --surface:#132238;
+    --surface-2:#1B2E48;
+    --gold:#CBA135;
+    --gold-soft:#E8C874;
+    --sage:#6E9B7C;
+    --amber:#C97B4A;
+    --text:#EDE6D6;
+    --text-muted:#8FA0B3;
+    --border:rgba(237,230,214,0.09);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:radial-gradient(ellipse at top, #101F33 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Work Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:0 0 60px 0;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px;}
+
+  /* header */
+  header{text-align:center;margin-bottom:28px;}
+  .logo-mark{width:64px;height:64px;border-radius:16px;margin-bottom:10px;box-shadow:0 4px 18px rgba(203,161,53,0.25);}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    opacity:0.8;
+  }
+  h1{
+    font-family:'Amiri', serif;
+    font-size:42px;
+    font-weight:700;
+    margin:6px 0 4px;
+    color:var(--text);
+    letter-spacing:0.5px;
+  }
+  .arabic-sub{
+    font-family:'Amiri', serif;
+    font-size:20px;
+    color:var(--gold-soft);
+    direction:rtl;
+    margin-bottom:2px;
+  }
+  .sub{color:var(--text-muted);font-size:14px;}
+
+  /* stat cards */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin:28px 0;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px 16px;
+    text-align:center;
+  }
+  .stat-num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:28px;
+    font-weight:700;
+    color:var(--gold);
+  }
+  .stat-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--text-muted);
+    margin-top:4px;
+  }
+  .stat-card.streak .stat-num{color:var(--sage);}
+
+  /* progress bar */
+  .progress-outer{
+    background:var(--surface-2);
+    border-radius:20px;
+    height:12px;
+    overflow:hidden;
+    margin:6px 0 30px;
+    border:1px solid var(--border);
+  }
+  .progress-inner{
+    height:100%;
+    background:linear-gradient(90deg, var(--sage), var(--gold));
+    border-radius:20px;
+    transition:width .6s ease;
+  }
+  .progress-caption{
+    display:flex;justify-content:space-between;
+    font-size:12px;color:var(--text-muted);margin-bottom:4px;
+  }
+
+  /* today panel */
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:24px;
+  }
+  .panel h2{
+    font-family:'Amiri', serif;
+    font-size:20px;
+    margin:0 0 12px;
+    color:var(--gold-soft);
+    display:flex;align-items:center;gap:8px;
+  }
+  .checkin-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  button{
+    font-family:'Work Sans', sans-serif;
+    cursor:pointer;
+    border:none;
+    border-radius:10px;
+    padding:10px 18px;
+    font-size:13px;
+    font-weight:600;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  button:active{transform:scale(0.97);}
+  .btn-gold{background:var(--gold);color:#1a1206;}
+  .btn-gold:hover{background:var(--gold-soft);}
+  .btn-gold:disabled{opacity:0.45;cursor:default;}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--gold-soft);}
+  .checkin-note{font-size:12px;color:var(--text-muted);}
+
+  .review-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .review-item{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--surface-2);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:13px;
+  }
+  .review-item .en{color:var(--text);}
+  .review-item .ar{font-family:'Amiri',serif;color:var(--gold-soft);font-size:15px;direction:rtl;}
+  .review-item button{padding:6px 12px;font-size:11px;}
+  .empty-note{color:var(--text-muted);font-size:13px;font-style:italic;}
+
+  /* phase sections */
+  .phase{margin-bottom:30px;}
+  .phase-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    border-bottom:1px dashed var(--border);
+    padding-bottom:8px;margin-bottom:14px;
+  }
+  .phase-title{
+    font-family:'Amiri', serif;
+    font-size:19px;
+    color:var(--text);
+  }
+  .phase-range{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+  .phase-pct{font-size:12px;color:var(--sage);font-family:'JetBrains Mono',monospace;}
+
+  .bead-grid{
+    display:flex;flex-wrap:wrap;gap:9px;
+  }
+  .bead{
+    width:36px;height:36px;border-radius:50%;
+    border:2px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;color:var(--text-muted);
+    cursor:pointer;position:relative;
+    background:var(--surface);
+    transition:all .2s ease;
+  }
+  .bead:hover{border-color:var(--gold-soft);color:var(--text);}
+  .bead.memorized{
+    background:var(--gold);border-color:var(--gold);color:#1a1206;font-weight:700;
+    box-shadow:0 0 10px rgba(203,161,53,0.45);
+  }
+  .bead.memorizing{
+    border-color:var(--sage);color:var(--sage);
+    box-shadow:0 0 0 3px rgba(110,155,122,0.15);
+  }
+  .bead.current::before{
+    content:'';position:absolute;inset:-5px;border-radius:50%;
+    border:1.5px solid var(--sage);opacity:0.7;
+  }
+  .bead.review-due::after{
+    content:'';position:absolute;top:-3px;right:-3px;width:9px;height:9px;
+    border-radius:50%;background:var(--amber);border:2px solid var(--bg);
+  }
+
+  /* modal */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(5,10,18,0.72);
+    display:none;align-items:center;justify-content:center;z-index:50;
+    padding:20px;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:16px;max-width:380px;width:100%;padding:24px;
+  }
+  .modal-ar{font-family:'Amiri',serif;font-size:30px;color:var(--gold-soft);direction:rtl;margin-bottom:2px;}
+  .modal-en{font-size:16px;color:var(--text);margin-bottom:2px;}
+  .modal-meta{font-size:12px;color:var(--text-muted);margin-bottom:18px;font-family:'JetBrains Mono',monospace;}
+  .status-options{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .status-opt{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border-radius:10px;border:1px solid var(--border);
+    cursor:pointer;font-size:13px;color:var(--text-muted);
+  }
+  .status-opt.active{border-color:var(--gold);color:var(--text);background:rgba(203,161,53,0.08);}
+  .status-opt .dot{width:10px;height:10px;border-radius:50%;border:2px solid currentColor;}
+  .modal-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .modal-close{color:var(--text-muted);background:none;border:none;font-size:20px;position:absolute;top:16px;right:18px;cursor:pointer;}
+  .modal{position:relative;}
+  .last-reviewed{font-size:11px;color:var(--text-muted);}
+
+  .footer-actions{text-align:center;margin-top:36px;}
+  .footer-actions button{font-size:11px;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--gold);color:#1a1206;padding:10px 20px;border-radius:10px;
+    font-size:13px;font-weight:600;opacity:0;pointer-events:none;
+    transition:opacity .3s ease, transform .3s ease;z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  @media (max-width:520px){
+    .stats{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    .stat-num{font-size:20px;}
+    h1{font-size:32px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div style="text-align:center;color:var(--text-muted);padding:60px 0;">Loading your journey…</div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // ---------- Surah data (number, english, arabic, ayah count) ----------
+  const SURAHS = [
+    [1,"Al-Fatihah","الفاتحة",7],[2,"Al-Baqarah","البقرة",286],[3,"Aal-E-Imran","آل عمران",200],
+    [4,"An-Nisa","النساء",176],[5,"Al-Ma'idah","المائدة",120],[6,"Al-An'am","الأنعام",165],
+    [7,"Al-A'raf","الأعراف",206],[8,"Al-Anfal","الأنفال",75],[9,"At-Tawbah","التوبة",129],
+    [10,"Yunus","يونس",109],[11,"Hud","هود",123],[12,"Yusuf","يوسف",111],
+    [13,"Ar-Ra'd","الرعد",43],[14,"Ibrahim","ابراهيم",52],[15,"Al-Hijr","الحجر",99],
+    [16,"An-Nahl","النحل",128],[17,"Al-Isra","الإسراء",111],[18,"Al-Kahf","الكهف",110],
+    [19,"Maryam","مريم",98],[20,"Ta-Ha","طه",135],[21,"Al-Anbiya","الأنبياء",112],
+    [22,"Al-Hajj","الحج",78],[23,"Al-Mu'minun","المؤمنون",118],[24,"An-Nur","النور",64],
+    [25,"Al-Furqan","الفرقان",77],[26,"Ash-Shu'ara","الشعراء",227],[27,"An-Naml","النمل",93],
+    [28,"Al-Qasas","القصص",88],[29,"Al-Ankabut","العنكبوت",69],[30,"Ar-Rum","الروم",60],
+    [31,"Luqman","لقمان",34],[32,"As-Sajdah","السجدة",30],[33,"Al-Ahzab","الأحزاب",73],
+    [34,"Saba","سبأ",54],[35,"Fatir","فاطر",45],[36,"Ya-Sin","يس",83],
+    [37,"As-Saffat","الصافات",182],[38,"Sad","ص",88],[39,"Az-Zumar","الزمر",75],
+    [40,"Ghafir","غافر",85],[41,"Fussilat","فصلت",54],[42,"Ash-Shura","الشورى",53],
+    [43,"Az-Zukhruf","الزخرف",89],[44,"Ad-Dukhan","الدخان",59],[45,"Al-Jathiyah","الجاثية",37],
+    [46,"Al-Ahqaf","الأحقاف",35],[47,"Muhammad","محمد",38],[48,"Al-Fath","الفتح",29],
+    [49,"Al-Hujurat","الحجرات",18],[50,"Qaf","ق",45],[51,"Adh-Dhariyat","الذاريات",60],
+    [52,"At-Tur","الطور",49],[53,"An-Najm","النجم",62],[54,"Al-Qamar","القمر",55],
+    [55,"Ar-Rahman","الرحمن",78],[56,"Al-Waqi'ah","الواقعة",96],[57,"Al-Hadid","الحديد",29],
+    [58,"Al-Mujadilah","المجادلة",22],[59,"Al-Hashr","الحشر",24],[60,"Al-Mumtahanah","الممتحنة",13],
+    [61,"As-Saff","الصف",14],[62,"Al-Jumu'ah","الجمعة",11],[63,"Al-Munafiqun","المنافقون",11],
+    [64,"At-Taghabun","التغابن",18],[65,"At-Talaq","الطلاق",12],[66,"At-Tahrim","التحريم",12],
+    [67,"Al-Mulk","الملك",30],[68,"Al-Qalam","القلم",52],[69,"Al-Haqqah","الحاقة",52],
+    [70,"Al-Ma'arij","المعارج",44],[71,"Nuh","نوح",28],[72,"Al-Jinn","الجن",28],
+    [73,"Al-Muzzammil","المزمل",20],[74,"Al-Muddaththir","المدثر",56],[75,"Al-Qiyamah","القيامة",40],
+    [76,"Al-Insan","الإنسان",31],[77,"Al-Mursalat","المرسلات",50],[78,"An-Naba","النبأ",40],
+    [79,"An-Nazi'at","النازعات",46],[80,"Abasa","عبس",42],[81,"At-Takwir","التكوير",29],
+    [82,"Al-Infitar","الإنفطار",19],[83,"Al-Mutaffifin","المطففين",36],[84,"Al-Inshiqaq","الإنشقاق",25],
+    [85,"Al-Buruj","البروج",22],[86,"At-Tariq","الطارق",17],[87,"Al-A'la","الأعلى",19],
+    [88,"Al-Ghashiyah","الغاشية",26],[89,"Al-Fajr","الفجر",30],[90,"Al-Balad","البلد",20],
+    [91,"Ash-Shams","الشمس",15],[92,"Al-Layl","الليل",21],[93,"Ad-Duha","الضحى",11],
+    [94,"Ash-Sharh","الشرح",8],[95,"At-Tin","التين",8],[96,"Al-Alaq","العلق",19],
+    [97,"Al-Qadr","القدر",5],[98,"Al-Bayyinah","البينة",8],[99,"Az-Zalzalah","الزلزلة",8],
+    [100,"Al-Adiyat","العاديات",11],[101,"Al-Qari'ah","القارعة",11],[102,"At-Takathur","التكاثر",8],
+    [103,"Al-Asr","العصر",3],[104,"Al-Humazah","الهمزة",9],[105,"Al-Fil","الفيل",5],
+    [106,"Quraysh","قريش",4],[107,"Al-Ma'un","الماعون",7],[108,"Al-Kawthar","الكوثر",3],
+    [109,"Al-Kafirun","الكافرون",6],[110,"An-Nasr","النصر",3],[111,"Al-Masad","المسد",5],
+    [112,"Al-Ikhlas","الإخلاص",4],[113,"Al-Falaq","الفلق",5],[114,"An-Nas","الناس",6]
+  ].map(([num,en,ar,ayahs])=>({num,en,ar,ayahs}));
+
+  const byNum = {};
+  SURAHS.forEach(s=>byNum[s.num]=s);
+
+  // custom plan order: foundation -> phase1 (19-114) -> phase2 (2-18)
+  const FOUNDATION = [1];
+  const PHASE1 = SURAHS.filter(s=>s.num>=19).map(s=>s.num);
+  const PHASE2 = SURAHS.filter(s=>s.num>=2 && s.num<=18).map(s=>s.num);
+
+  const STORAGE_KEY = 'hifz-tracker-state';
+  let state = null;
+  let currentModalNum = null;
+
+  function defaultState(){
+    const surahs = {};
+    SURAHS.forEach(s=>{
+      surahs[s.num] = {
+        status: s.num===1 ? 'memorized' : 'not-started', // Al-Fatihah assumed known; toggle if not
+        lastReviewed: s.num===1 ? todayStr() : null,
+        memorizedDate: s.num===1 ? todayStr() : null
+      };
+    });
+    return { surahs, checkins: {} };
+  }
+
+  function todayStr(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function daysAgo(n){
+    const d = new Date();
+    d.setDate(d.getDate()-n);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        state = JSON.parse(res.value);
+        // backfill any missing surahs (safety)
+        SURAHS.forEach(s=>{
+          if(!state.surahs[s.num]) state.surahs[s.num] = {status:'not-started', lastReviewed:null, memorizedDate:null};
+        });
+        if(!state.checkins) state.checkins = {};
+      } else {
+        state = defaultState();
+      }
+    }catch(e){
+      state = defaultState();
+    }
+  }
+
+  async function saveState(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+    }catch(e){
+      console.error('Save failed', e);
+      showToast('Could not save — try again');
+    }
+  }
+
+  // ---------- computations ----------
+  function totalAyahs(){ return SURAHS.reduce((a,s)=>a+s.ayahs,0); }
+  function memorizedAyahs(){
+    return SURAHS.reduce((a,s)=> a + (state.surahs[s.num].status==='memorized' ? s.ayahs : 0), 0);
+  }
+  function overallPct(){ return Math.round((memorizedAyahs()/totalAyahs())*1000)/10; }
+  function memorizedCount(){ return SURAHS.filter(s=>state.surahs[s.num].status==='memorized').length; }
+
+  function currentStreak(){
+    let streak = 0;
+    let d = state.checkins[todayStr()] ? 0 : 1; // if today not checked yet, start counting from yesterday
+    let cursor = new Date();
+    if(!state.checkins[todayStr()]) cursor.setDate(cursor.getDate()-1);
+    while(true){
+      const key = cursor.getFullYear()+'-'+String(cursor.getMonth()+1).padStart(2,'0')+'-'+String(cursor.getDate()).padStart(2,'0');
+      if(state.checkins[key]){
+        streak++;
+        cursor.setDate(cursor.getDate()-1);
+      } else break;
+    }
+    return streak;
+  }
+
+  function isReviewDue(num){
+    const rec = state.surahs[num];
+    if(rec.status!=='memorized') return false;
+    if(!rec.lastReviewed) return true;
+    const last = new Date(rec.lastReviewed);
+    const diffDays = Math.floor((Date.now()-last.getTime())/86400000);
+    return diffDays >= 7; // simple weekly rotation
+  }
+
+  function reviewSuggestions(){
+    const memorized = SURAHS.filter(s=>state.surahs[s.num].status==='memorized');
+    memorized.sort((a,b)=>{
+      const la = state.surahs[a.num].lastReviewed || '0000-00-00';
+      const lb = state.surahs[b.num].lastReviewed || '0000-00-00';
+      return la.localeCompare(lb);
+    });
+    return memorized.slice(0,5);
+  }
+
+  function currentFocusNum(){
+    const order = [...FOUNDATION, ...PHASE1, ...PHASE2];
+    for(const num of order){
+      if(state.surahs[num].status!=='memorized') return num;
+    }
+    return null;
+  }
+
+  // ---------- rendering ----------
+  function render(){
+    const app = document.getElementById('app');
+    const pct = overallPct();
+    const streak = currentStreak();
+    const focusNum = currentFocusNum();
+    const suggestions = reviewSuggestions();
+    const checkedToday = !!state.checkins[todayStr()];
+
+    let milestoneMsg = '';
+    if(pct>=100) milestoneMsg = "You've completed the whole Qur'an — may Allah preserve it for you. الحمد لله";
+    else if(pct>=75) milestoneMsg = "Three quarters there. The finish line is close.";
+    else if(pct>=50) milestoneMsg = "Halfway through the whole Qur'an — real, tangible progress.";
+    else if(pct>=25) milestoneMsg = "A quarter of the way. Momentum is building.";
+
+    app.innerHTML = `
+      <header>
+        <img src="logo.svg" alt="Hifz Journey logo" class="logo-mark">
+        <div class="eyebrow">Hifz Journey</div>
+        <div class="arabic-sub">رحلة حفظ القرآن</div>
+        <h1>My Qur'an Memorization</h1>
+        <div class="sub">Maryam → An-Nās, then Al-Baqarah → Al-Kahf</div>
+      </header>
+
+      <div class="progress-caption">
+        <span>${memorizedAyahs().toLocaleString()} / ${totalAyahs().toLocaleString()} verses</span>
+        <span>${pct}%</span>
+      </div>
+      <div class="progress-outer"><div class="progress-inner" style="width:${pct}%"></div></div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-num">${pct}%</div>
+          <div class="stat-label">Qur'an Memorized</div>
+        </div>
+        <div class="stat-card streak">
+          <div class="stat-num">${streak}</div>
+          <div class="stat-label">Day Streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${memorizedCount()}/114</div>
+          <div class="stat-label">Surahs Done</div>
+        </div>
+      </div>
+
+      ${milestoneMsg ? `<div class="panel" style="border-color:var(--gold);"><span style="color:var(--gold-soft);font-family:'Amiri',serif;font-size:16px;">${milestoneMsg}</span></div>` : ''}
+
+      <div class="panel">
+        <h2>Today</h2>
+        <div class="checkin-row">
+          <button class="btn-gold" id="checkinBtn" ${checkedToday?'disabled':''}>${checkedToday ? "✓ Practiced today" : "Mark today's practice"}</button>
+          <span class="checkin-note">${focusNum ? `Currently focused on <strong>${byNum[focusNum].en}</strong> (${byNum[focusNum].ar})` : 'All surahs memorized!'}</span>
+        </div>
+        <div style="margin-top:16px;">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Review queue (oldest reviewed first)</div>
+          <div class="review-list">
+            ${suggestions.length ? suggestions.map(s=>`
+              <div class="review-item">
+                <span><span class="ar">${s.ar}</span> &nbsp; <span class="en">${s.en}</span></span>
+                <button class="btn-ghost" data-review="${s.num}">Reviewed today</button>
+              </div>
+            `).join('') : '<div class="empty-note">Nothing memorized yet — your first review queue appears once you mark a surah as memorized.</div>'}
+          </div>
+        </div>
+      </div>
+
+      ${renderPhase('Foundation', 'الأساس', FOUNDATION, focusNum)}
+      ${renderPhase('Phase 1 · Maryam → An-Nās', 'المرحلة الأولى', PHASE1, focusNum)}
+      ${renderPhase('Phase 2 · Al-Baqarah → Al-Kahf', 'المرحلة الثانية', PHASE2, focusNum)}
+
+      <div class="footer-actions">
+        <button class="btn-ghost" id="resetBtn">Reset all progress</button>
+      </div>
+    `;
+
+    document.getElementById('checkinBtn').onclick = doCheckin;
+    document.getElementById('resetBtn').onclick = doReset;
+    app.querySelectorAll('[data-review]').forEach(btn=>{
+      btn.onclick = ()=> markReviewed(parseInt(btn.getAttribute('data-review')));
+    });
+    app.querySelectorAll('.bead').forEach(b=>{
+      b.onclick = ()=> openModal(parseInt(b.getAttribute('data-num')));
+    });
+  }
+
+  function renderPhase(title, arTitle, nums, focusNum){
+    const done = nums.filter(n=>state.surahs[n].status==='memorized').length;
+    const pct = Math.round((done/nums.length)*100);
+    const beads = nums.map(n=>{
+      const s = byNum[n];
+      const st = state.surahs[n].status;
+      const classes = ['bead'];
+      if(st==='memorized') classes.push('memorized');
+      if(st==='memorizing') classes.push('memorizing');
+      if(n===focusNum) classes.push('current');
+      if(isReviewDue(n)) classes.push('review-due');
+      return `<div class="${classes.join(' ')}" data-num="${n}" title="${s.en} (${s.ayahs} verses)">${n}</div>`;
+    }).join('');
+    return `
+      <div class="phase">
+        <div class="phase-head">
+          <div><span class="phase-title">${title}</span></div>
+          <div class="phase-pct">${done}/${nums.length} · ${pct}%</div>
+        </div>
+        <div class="bead-grid">${beads}</div>
+      </div>
+    `;
+  }
+
+  function openModal(num){
+    currentModalNum = num;
+    const s = byNum[num];
+    const rec = state.surahs[num];
+    const backdrop = document.getElementById('modalBackdrop');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = `
+      <button class="modal-close" id="modalCloseBtn">×</button>
+      <div class="modal-ar">${s.ar}</div>
+      <div class="modal-en">${num}. ${s.en}</div>
+      <div class="modal-meta">${s.ayahs} verses</div>
+      <div class="status-options">
+        ${statusOpt('not-started','Not started', rec.status)}
+        ${statusOpt('memorizing','Currently memorizing', rec.status)}
+        ${statusOpt('memorized','Memorized', rec.status)}
+      </div>
+      <div class="modal-footer">
+        <span class="last-reviewed">${rec.lastReviewed ? 'Last reviewed: '+rec.lastReviewed : 'Not reviewed yet'}</span>
+        ${rec.status==='memorized' ? `<button class="btn-gold" id="modalReviewBtn">Mark reviewed today</button>` : ''}
+      </div>
+    `;
+    backdrop.classList.add('open');
+    document.getElementById('modalCloseBtn').onclick = closeModal;
+    content.querySelectorAll('[data-status]').forEach(el=>{
+      el.onclick = ()=> setStatus(num, el.getAttribute('data-status'));
+    });
+    const reviewBtn = document.getElementById('modalReviewBtn');
+    if(reviewBtn) reviewBtn.onclick = ()=> markReviewed(num);
+  }
+
+  function statusOpt(value, label, current){
+    return `<div class="status-opt ${current===value?'active':''}" data-status="${value}">
+      <span class="dot"></span>${label}
+    </div>`;
+  }
+
+  function closeModal(){
+    document.getElementById('modalBackdrop').classList.remove('open');
+    currentModalNum = null;
+  }
+
+  async function setStatus(num, status){
+    const rec = state.surahs[num];
+    rec.status = status;
+    if(status==='memorized' && !rec.memorizedDate){
+      rec.memorizedDate = todayStr();
+      rec.lastReviewed = todayStr();
+    }
+    if(status!=='memorized'){
+      // keep history but no longer "due" styling matters
+    }
+    await saveState();
+    render();
+    openModal(num);
+    if(status==='memorized') showToast('Marked as memorized — well done');
+  }
+
+  async function markReviewed(num){
+    state.surahs[num].lastReviewed = todayStr();
+    await saveState();
+    render();
+    if(document.getElementById('modalBackdrop').classList.contains('open') && currentModalNum===num){
+      openModal(num);
+    }
+    showToast('Review logged');
+  }
+
+  async function doCheckin(){
+    state.checkins[todayStr()] = true;
+    await saveState();
+    render();
+    showToast('Streak updated — keep going');
+  }
+
+  async function doReset(){
+    if(!confirm('This will erase all your progress. Are you sure?')) return;
+    state = defaultState();
+    await saveState();
+    render();
+    showToast('Progress reset');
+  }
+
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  document.getElementById('modalBackdrop').addEventListener('click', (e)=>{
+    if(e.target.id==='modalBackdrop') closeModal();
+  });
+
+  // ---------- init ----------
+  (async function init(){
+    await loadState();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
