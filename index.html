@@ -382,9 +382,9 @@
 
   async function loadState(){
     try{
-      const res = await window.storage.get(STORAGE_KEY, false);
-      if(res && res.value){
-        state = JSON.parse(res.value);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        state = JSON.parse(raw);
         // backfill any missing surahs (safety)
         SURAHS.forEach(s=>{
           if(!state.surahs[s.num]) state.surahs[s.num] = {status:'not-started', lastReviewed:null, memorizedDate:null};
@@ -400,7 +400,7 @@
 
   async function saveState(){
     try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }catch(e){
       console.error('Save failed', e);
       showToast('Could not save — try again');
