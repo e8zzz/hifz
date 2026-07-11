@@ -29,19 +29,29 @@
     --text-muted:#8FA0B3;
     --border:rgba(237,230,214,0.09);
   }
+  html{
+    background:var(--bg);
+    overscroll-behavior:none;
+    height:100%;
+  }
   *{box-sizing:border-box;}
   body{
     margin:0;
+    min-height:100%;
+    overscroll-behavior:none;
     background:radial-gradient(ellipse at top, #101F33 0%, var(--bg) 55%);
+    background-attachment:fixed;
     color:var(--text);
     font-family:'Work Sans', sans-serif;
     -webkit-font-smoothing:antialiased;
+    line-height:1.55;
+    letter-spacing:0.1px;
     padding:0 0 60px 0;
   }
   .wrap{max-width:920px;margin:0 auto;padding:32px 20px;}
 
   /* header */
-  header{text-align:center;margin-bottom:28px;}
+  header{text-align:center;margin-bottom:24px;padding-top:8px;}
   .logo-mark{width:64px;height:64px;border-radius:16px;margin-bottom:10px;box-shadow:0 4px 18px rgba(203,161,53,0.25);}
   .eyebrow{
     font-family:'JetBrains Mono', monospace;
@@ -61,7 +71,8 @@
   }
   .arabic-sub{
     font-family:'Amiri', serif;
-    font-size:20px;
+    font-size:28px;
+    font-weight:700;
     color:var(--gold-soft);
     direction:rtl;
     margin-bottom:2px;
@@ -165,19 +176,30 @@
   .empty-note{color:var(--text-muted);font-size:13px;font-style:italic;}
 
   /* phase sections */
-  .phase{margin-bottom:30px;}
+  .phase{margin-bottom:38px;}
   .phase-head{
     display:flex;align-items:baseline;justify-content:space-between;
     border-bottom:1px dashed var(--border);
-    padding-bottom:8px;margin-bottom:14px;
+    padding-bottom:10px;margin-bottom:16px;
   }
   .phase-title{
     font-family:'Amiri', serif;
-    font-size:19px;
+    font-size:24px;
+    font-weight:700;
     color:var(--text);
+    direction:rtl;
+    text-align:right;
+    line-height:1.6;
+    letter-spacing:0.2px;
   }
-  .phase-range{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
-  .phase-pct{font-size:12px;color:var(--sage);font-family:'JetBrains Mono',monospace;}
+  .phase-pct{
+    font-size:12px;
+    color:var(--sage);
+    font-family:'JetBrains Mono',monospace;
+    direction:ltr;
+    text-align:left;
+    letter-spacing:0.3px;
+  }
 
   .bead-grid{
     display:flex;flex-wrap:wrap;gap:9px;
@@ -195,11 +217,11 @@
   .bead:hover{border-color:var(--gold-soft);color:var(--text);}
   .bead.memorized{
     background:var(--gold);border-color:var(--gold);color:#1a1206;font-weight:700;
-    box-shadow:0 0 10px rgba(203,161,53,0.45);
+    box-shadow:0 0 8px rgba(203,161,53,0.32);
   }
   .bead.memorizing{
     border-color:var(--sage);color:var(--sage);
-    box-shadow:0 0 0 3px rgba(110,155,122,0.15);
+    box-shadow:0 0 0 3px rgba(110,155,122,0.12);
   }
   .bead.current::before{
     content:'';position:absolute;inset:-5px;border-radius:50%;
@@ -221,8 +243,8 @@
     background:var(--surface);border:1px solid var(--border);
     border-radius:16px;max-width:380px;width:100%;padding:24px;
   }
-  .modal-ar{font-family:'Amiri',serif;font-size:30px;color:var(--gold-soft);direction:rtl;margin-bottom:2px;}
-  .modal-en{font-size:16px;color:var(--text);margin-bottom:2px;}
+  .modal-ar{font-family:'Amiri',serif;font-size:30px;color:var(--gold-soft);direction:rtl;text-align:left;margin:0 44px 2px 0;}
+  .modal-en{font-size:16px;color:var(--text);margin:0 44px 2px 0;text-align:left;}
   .modal-meta{font-size:12px;color:var(--text-muted);margin-bottom:18px;font-family:'JetBrains Mono',monospace;}
   .status-options{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
   .status-opt{
@@ -313,10 +335,9 @@
   const byNum = {};
   SURAHS.forEach(s=>byNum[s.num]=s);
 
-  // custom plan order: foundation -> phase1 (19-114) -> phase2 (2-18)
-  const FOUNDATION = [1];
+  // custom plan order: phase1 (19-114) -> phase2 (1, then 2-18)
   const PHASE1 = SURAHS.filter(s=>s.num>=19).map(s=>s.num);
-  const PHASE2 = SURAHS.filter(s=>s.num>=2 && s.num<=18).map(s=>s.num);
+  const PHASE2 = [1, ...SURAHS.filter(s=>s.num>=2 && s.num<=18).map(s=>s.num)];
 
   const STORAGE_KEY = 'hifz-tracker-state';
   let state = null;
@@ -415,7 +436,7 @@
   }
 
   function currentFocusNum(){
-    const order = [...FOUNDATION, ...PHASE1, ...PHASE2];
+    const order = [...PHASE1, ...PHASE2];
     for(const num of order){
       if(state.surahs[num].status!=='memorized') return num;
     }
@@ -439,11 +460,7 @@
 
     app.innerHTML = `
       <header>
-        <img src="logo.svg" alt="Hifz Journey logo" class="logo-mark">
-        <div class="eyebrow">Hifz Journey</div>
         <div class="arabic-sub">رحلة حفظ القرآن</div>
-        <h1>My Qur'an Memorization</h1>
-        <div class="sub">Maryam → An-Nās, then Al-Baqarah → Al-Kahf</div>
       </header>
 
       <div class="progress-caption">
@@ -488,9 +505,8 @@
         </div>
       </div>
 
-      ${renderPhase('Foundation', 'الأساس', FOUNDATION, focusNum)}
-      ${renderPhase('Phase 1 · Maryam → An-Nās', 'المرحلة الأولى', PHASE1, focusNum)}
-      ${renderPhase('Phase 2 · Al-Baqarah → Al-Kahf', 'المرحلة الثانية', PHASE2, focusNum)}
+      ${renderPhase('من مريم إلى الناس', PHASE1, focusNum)}
+      ${renderPhase('من البقرة إلى الكهف', PHASE2, focusNum)}
 
       <div class="footer-actions">
         <button class="btn-ghost" id="resetBtn">Reset all progress</button>
@@ -507,7 +523,7 @@
     });
   }
 
-  function renderPhase(title, arTitle, nums, focusNum){
+  function renderPhase(title, nums, focusNum){
     const done = nums.filter(n=>state.surahs[n].status==='memorized').length;
     const pct = Math.round((done/nums.length)*100);
     const beads = nums.map(n=>{
@@ -523,8 +539,8 @@
     return `
       <div class="phase">
         <div class="phase-head">
-          <div><span class="phase-title">${title}</span></div>
           <div class="phase-pct">${done}/${nums.length} · ${pct}%</div>
+          <div><span class="phase-title">${title}</span></div>
         </div>
         <div class="bead-grid">${beads}</div>
       </div>
