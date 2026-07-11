@@ -412,6 +412,10 @@
   function memorizedAyahs(){
     return SURAHS.reduce((a,s)=> a + (state.surahs[s.num].status==='memorized' ? s.ayahs : 0), 0);
   }
+  const TOTAL_PAGES = 604; // standard Madani Mushaf page count
+  function memorizedPages(){
+    return Math.round((memorizedAyahs()/totalAyahs())*TOTAL_PAGES);
+  }
   function overallPct(){ return Math.round((memorizedAyahs()/totalAyahs())*1000)/10; }
   function memorizedCount(){ return SURAHS.filter(s=>state.surahs[s.num].status==='memorized').length; }
 
@@ -478,7 +482,7 @@
       </header>
 
       <div class="progress-caption">
-        <span>${memorizedAyahs().toLocaleString()} / ${totalAyahs().toLocaleString()} verses</span>
+        <span>≈ ${memorizedPages()} / ${TOTAL_PAGES} pages</span>
         <span>${pct}%</span>
       </div>
       <div class="progress-outer"><div class="progress-inner" style="width:${pct}%"></div></div>
