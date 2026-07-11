@@ -273,7 +273,7 @@
   .modal{position:relative;}
   .last-reviewed{font-size:11px;color:var(--text-muted);}
 
-  .footer-actions{text-align:center;margin-top:36px;}
+  .footer-actions{text-align:center;margin-top:36px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
   .footer-actions button{font-size:11px;}
 
   .toast{
@@ -356,6 +356,11 @@
   const STORAGE_KEY = 'hifz-tracker-state';
   let state = null;
   let currentModalNum = null;
+  let lastKnownPct = null;
+  const MILESTONES = [25, 50, 75, 100];
+  function crossedMilestone(before, after){
+    return MILESTONES.find(m => before < m && after >= m);
+  }
 
   function defaultState(){
     const surahs = {};
@@ -366,7 +371,7 @@
         memorizedDate: s.num===1 ? todayStr() : null
       };
     });
-    return { surahs, checkins: {} };
+    return { surahs, checkins: {}, soundEnabled: true };
   }
 
   function todayStr(){
@@ -390,6 +395,7 @@
           if(!state.surahs[s.num]) state.surahs[s.num] = {status:'not-started', lastReviewed:null, memorizedDate:null};
         });
         if(!state.checkins) state.checkins = {};
+        if(typeof state.soundEnabled !== 'boolean') state.soundEnabled = true;
       } else {
         state = defaultState();
       }
@@ -407,14 +413,83 @@
     }
   }
 
+  // ---------- sound engine (synthesized, no external files) ----------
+  let audioCtx = null;
+  function getAudioCtx(){
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function playNote(ctx, freq, time, dur, gain, type){
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0, time);
+    g.gain.linearRampToValueAtTime(gain, time + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(time); osc.stop(time + dur + 0.05);
+  }
+  function playSound(kind){
+    if(!state.soundEnabled) return;
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const t = ctx.currentTime;
+    if(kind === 'checkin'){
+      playNote(ctx, 587.33, t, 0.16, 0.14, 'sine');      // D5
+      playNote(ctx, 880.00, t + 0.08, 0.2, 0.14, 'sine'); // A5
+    } else if(kind === 'review'){
+      playNote(ctx, 660, t, 0.14, 0.11, 'triangle');
+    } else if(kind === 'memorized'){
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+      notes.forEach((f,i)=> playNote(ctx, f, t + i*0.09, 0.32, 0.15, 'sine'));
+    } else if(kind === 'milestone'){
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5 E5 G5 C6 E6
+      notes.forEach((f,i)=>{
+        playNote(ctx, f, t + i*0.1, 0.5, 0.16, 'sine');
+        playNote(ctx, f*2, t + i*0.1, 0.4, 0.045, 'sine');
+      });
+    }
+  }
+
   // ---------- computations ----------
+
+  // Starting page of each surah in the standard 604-page Madani Mushaf (King Fahd Complex layout).
+  // Note: page numbers can differ slightly by print/edition — this matches the most common Uthmani Madani mushaf.
+  const PAGE_START = {
+    1:1,2:2,3:50,4:77,5:106,6:128,7:151,8:177,9:187,10:208,
+    11:221,12:235,13:249,14:255,15:262,16:267,17:282,18:293,19:305,20:312,
+    21:322,22:332,23:342,24:350,25:359,26:367,27:377,28:385,29:396,30:404,
+    31:411,32:415,33:418,34:428,35:434,36:440,37:446,38:453,39:458,40:467,
+    41:477,42:483,43:489,44:496,45:499,46:502,47:507,48:511,49:515,50:518,
+    51:520,52:523,53:526,54:528,55:531,56:534,57:537,58:542,59:545,60:549,
+    61:551,62:553,63:554,64:556,65:558,66:560,67:562,68:564,69:566,70:568,
+    71:570,72:572,73:574,74:575,75:577,76:578,77:580,78:582,79:583,80:585,
+    81:586,82:587,83:587,84:589,85:590,86:591,87:591,88:592,89:593,90:594,
+    91:595,92:595,93:596,94:596,95:597,96:597,97:598,98:598,99:599,100:599,
+    101:600,102:600,103:601,104:601,105:601,106:602,107:602,108:602,109:603,110:603,
+    111:603,112:604,113:604,114:604
+  };
+
   function totalAyahs(){ return SURAHS.reduce((a,s)=>a+s.ayahs,0); }
   function memorizedAyahs(){
     return SURAHS.reduce((a,s)=> a + (state.surahs[s.num].status==='memorized' ? s.ayahs : 0), 0);
   }
   const TOTAL_PAGES = 604; // standard Madani Mushaf page count
   function memorizedPages(){
-    return Math.round((memorizedAyahs()/totalAyahs())*TOTAL_PAGES);
+    const covered = new Array(TOTAL_PAGES + 1).fill(false); // index 1..604
+    SURAHS.forEach((s, i)=>{
+      if(state.surahs[s.num].status !== 'memorized') return;
+      const start = PAGE_START[s.num];
+      const nextStart = (i + 1 < SURAHS.length) ? PAGE_START[SURAHS[i+1].num] : TOTAL_PAGES + 1;
+      for(let p = start; p < nextStart; p++) covered[p] = true;
+    });
+    return covered.filter(Boolean).length;
   }
   function overallPct(){ return Math.round((memorizedAyahs()/totalAyahs())*1000)/10; }
   function memorizedCount(){ return SURAHS.filter(s=>state.surahs[s.num].status==='memorized').length; }
@@ -482,7 +557,7 @@
       </header>
 
       <div class="progress-caption">
-        <span>≈ ${memorizedPages()} / ${TOTAL_PAGES} pages</span>
+        <span>${memorizedAyahs().toLocaleString()} / ${totalAyahs().toLocaleString()} verses</span>
         <span>${pct}%</span>
       </div>
       <div class="progress-outer"><div class="progress-inner" style="width:${pct}%"></div></div>
@@ -527,12 +602,14 @@
       ${renderPhase('من البقرة إلى الكهف', PHASE2, focusNum)}
 
       <div class="footer-actions">
+        <button class="btn-ghost" id="soundBtn">${state.soundEnabled ? '🔊 Sound on' : '🔈 Sound off'}</button>
         <button class="btn-ghost" id="resetBtn">Reset all progress</button>
       </div>
     `;
 
     document.getElementById('checkinBtn').onclick = doCheckin;
     document.getElementById('resetBtn').onclick = doReset;
+    document.getElementById('soundBtn').onclick = toggleSound;
     app.querySelectorAll('[data-review]').forEach(btn=>{
       btn.onclick = ()=> markReviewed(parseInt(btn.getAttribute('data-review')));
     });
@@ -608,18 +685,27 @@
 
   async function setStatus(num, status){
     const rec = state.surahs[num];
+    const pctBefore = overallPct();
     rec.status = status;
     if(status==='memorized' && !rec.memorizedDate){
       rec.memorizedDate = todayStr();
       rec.lastReviewed = todayStr();
     }
-    if(status!=='memorized'){
-      // keep history but no longer "due" styling matters
-    }
     await saveState();
+    const pctAfter = overallPct();
     render();
     openModal(num);
-    if(status==='memorized') showToast('Marked as memorized — well done');
+    if(status==='memorized'){
+      const crossed = crossedMilestone(pctBefore, pctAfter);
+      if(crossed){
+        playSound('milestone');
+        showToast(crossed===100 ? "Qur'an complete — الحمد لله" : `Milestone: ${crossed}% memorized`);
+      } else {
+        playSound('memorized');
+        showToast('Marked as memorized — well done');
+      }
+    }
+    lastKnownPct = pctAfter;
   }
 
   async function markReviewed(num){
@@ -629,6 +715,7 @@
     if(document.getElementById('modalBackdrop').classList.contains('open') && currentModalNum===num){
       openModal(num);
     }
+    playSound('review');
     showToast('Review logged');
   }
 
@@ -636,7 +723,15 @@
     state.checkins[todayStr()] = true;
     await saveState();
     render();
+    playSound('checkin');
     showToast('Streak updated — keep going');
+  }
+
+  async function toggleSound(){
+    state.soundEnabled = !state.soundEnabled;
+    await saveState();
+    if(state.soundEnabled) playSound('checkin');
+    render();
   }
 
   async function doReset(){
@@ -663,6 +758,7 @@
   // ---------- init ----------
   (async function init(){
     await loadState();
+    lastKnownPct = overallPct();
     render();
   })();
 })();
