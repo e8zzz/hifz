@@ -2,7 +2,7 @@
   "name": "Hifz Journey — Qur'an Memorization Tracker",
   "short_name": "Hifz Journey",
   "description": "Track, plan, and stay consistent with your Qur'an memorization journey.",
-  "start_url": "./hifz-tracker.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
